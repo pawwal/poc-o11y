@@ -27,6 +27,7 @@ Thumbs.db
 # Exclude all JARs except specific ones in docker/config
 *.jar
 !docker/config/orbeon/opentelemetry-javaagent.jar
+!docker/config/orbeon/pyroscope-otel.jar
 *.war
 *.ear
 *.logs

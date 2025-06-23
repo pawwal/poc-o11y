@@ -93,6 +93,8 @@ services:
     environment:
       - OTEL_SDK_DISABLED=false
       - OTEL_SERVICE_NAME=OrbeonForms
+      - PYROSCOPE_APPLICATION_NAME=OrbeonForms
+      - OTEL_JAVAAGENT_EXTENSIONS=/opt/pyroscope-otel.jar
       - OTEL_LOGS_EXPORTER=none
       - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_EXPORTER_PROMETHEUS_PORT=9464
@@ -104,8 +106,10 @@ services:
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://grafana-alloy:4317
+      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
     volumes:
       - ./config/orbeon/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+      - ./config/orbeon/pyroscope-otel.jar:/opt/pyroscope-otel.jar
       - ./config/orbeon/jmx-metrics.yaml:/opt/jmx-metrics.yaml
       - ./config/orbeon/setenv.sh:/usr/local/tomcat/bin/setenv.sh
       - ${ORBEON_PROPERTIES_FILE:-./config/orbeon/properties-local.xml}:/usr/local/tomcat/webapps/orbeon/WEB-INF/resources/config/properties-local.xml
@@ -135,6 +139,11 @@ services:
       - "3100:3100"
     volumes:
       - "./config/infra/loki.yaml:/etc/loki/loki.yaml"
+
+  pyroscope:
+    image: grafana/pyroscope
+    ports:
+      - "4040:4040"
 
 volumes:
   grafana-storage:
