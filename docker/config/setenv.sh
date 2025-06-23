@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+CATALINA_OPTS="$CATALINA_OPTS -javaagent:/opt/opentelemetry-javaagent.jar -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=8686 -Dcom.sun.management.jmxremote.rmi.port=8686 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Djava.rmi.server.hostname=127.0.0.1"
+# CATALINA_OPTS="$CATALINA_OPTS -javaagent:/opt/opentelemetry-javaagent.jar"

@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+
+  grafana-alloy:
+    image: grafana/alloy:latest
+    container_name: grafana-alloy
+    ports:
+      - "12345:12345"
+      - "4317"
+      - "4318"
+    volumes:
+      - ./config/config.alloy:/etc/alloy/config.alloy
+      - alloy-storage:/var/lib/alloy
+    environment:
+      - ALLOY_ADMIN_USER=admin
+      - ALLOY_ADMIN_PASSWORD=admin
+    command:
+      - 'run'
+      - '--server.http.listen-addr=0.0.0.0:12345'
+      - '/etc/alloy/config.alloy'
+    restart: unless-stopped
+
+#  tomcat:
+#    image: tomcat:latest
+#    container_name: tomcat
+#    ports:
+#      - "8080:8080"
+#      - "9464:9464"
+#    environment:
+#      - OTEL_SDK_DISABLED=false
+#      - OTEL_SERVICE_NAME=EmptyTomcat
+#      - OTEL_LOGS_EXPORTER=none
+#      - OTEL_METRICS_EXPORTER=prometheus
+#      - OTEL_EXPORTER_PROMETHEUS_PORT=9464
+#      - OTEL_METRIC_EXPORT_INTERVAL=1000
+#      - OTEL_TRACES_EXPORTER=otlp
+#      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+#      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317
+#      - OTEL_LOGS_EXPORTER=otlp
+#      - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
+#      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://grafana-alloy:4317
+#    volumes:
+#      - ./config/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+#      - ./config/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+#      - tomcat-webapps:/usr/local/tomcat/webapps
+#    restart: unless-stopped
+
+  postgres:
+    image: orbeon/postgres:2024.1.1-pe
+    restart: always
+    ports:
+      - ${ORBEON_POSTGRES_PORT:-5432}:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${ORBEON_POSTGRES_DB:-orbeon}
+      POSTGRES_USER: ${ORBEON_POSTGRES_USER:-orbeon}
+      POSTGRES_PASSWORD: ${ORBEON_POSTGRES_PASSWORD:-orbeon}
+
+  orbeon-forms:
+    image: orbeon/orbeon-forms:2024.1.1-pe
+    ports:
+      - "8081:8080"
+      - "9465:9464"
+      - "8686:8686"
+    environment:
+      - OTEL_SDK_DISABLED=false
+      - OTEL_SERVICE_NAME=OrbeonForms
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9464
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
+      - OTEL_JMX_CONFIG=/opt/jmx-metrics.yaml
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://grafana-alloy:4317
+    volumes:
+      - ./config/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+      - ./config/orbeon/jmx-metrics.yaml:/opt/jmx-metrics.yaml
+      - ./config/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+      - ${ORBEON_PROPERTIES_FILE:-./config/orbeon/properties-local.xml}:/usr/local/tomcat/webapps/orbeon/WEB-INF/resources/config/properties-local.xml
+      - ${ORBEON_TOMCAT_CONTEXT_FILE:-./config/orbeon/orbeon.xml}:/usr/local/tomcat/conf/Catalina/localhost/orbeon.xml
+      - "~/.orbeon/license.xml:/usr/local/tomcat/webapps/orbeon/WEB-INF/resources/config/license.xml"
+    depends_on:
+      - postgres
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+      # Ten wolumen ma jakies problemy z uprawnieniami
+      #- tempo-storage:/tmp/tempo
+    command:
+      - '-config.file=/etc/tempo.yaml'
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    command: ["--pattern-ingester.enabled=true", "-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - "./config/loki.yaml:/etc/loki/loki.yaml"
+
+volumes:
+  grafana-storage:
+  prometheus-data:
+  alloy-storage:
+  tomcat-webapps:
+  tempo-storage:
+  pgdata:
+    name: ${ORBEON_POSTGRES_VOLUME:-orbeon_pgdata}
