@@ -104,10 +104,6 @@ rules:
         metricAttribute:
           state: const(idle)
         desc: The number of open jdbc connections
-      maxActive:
-        metric: tomcat.db.client.connections.max
-        metricAttribute:
-          state: const(used)
       maxTotal:
         metric: tomcat.db.client.connections.max
         metricAttribute:
