@@ -26,7 +26,7 @@ Thumbs.db
 *.class
 # Exclude all JARs except specific ones in docker/config
 *.jar
-!docker/config/opentelemetry-javaagent.jar
+!docker/config/orbeon/opentelemetry-javaagent.jar
 *.war
 *.ear
 *.logs

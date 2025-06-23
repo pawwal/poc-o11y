@@ -19,7 +19,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./config/infra/prometheus.yaml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -36,7 +36,7 @@ services:
       - "4317"
       - "4318"
     volumes:
-      - ./config/config.alloy:/etc/alloy/config.alloy
+      - ./config/infra/config.alloy:/etc/alloy/config.alloy
       - alloy-storage:/var/lib/alloy
     environment:
       - ALLOY_ADMIN_USER=admin
@@ -67,8 +67,8 @@ services:
 #      - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
 #      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://grafana-alloy:4317
 #    volumes:
-#      - ./config/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
-#      - ./config/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+#      - ./config/orbeon/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+#      - ./config/orbeon/setenv.sh:/usr/local/tomcat/bin/setenv.sh
 #      - tomcat-webapps:/usr/local/tomcat/webapps
 #    restart: unless-stopped
 
@@ -105,9 +105,9 @@ services:
       - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://grafana-alloy:4317
     volumes:
-      - ./config/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+      - ./config/orbeon/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       - ./config/orbeon/jmx-metrics.yaml:/opt/jmx-metrics.yaml
-      - ./config/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+      - ./config/orbeon/setenv.sh:/usr/local/tomcat/bin/setenv.sh
       - ${ORBEON_PROPERTIES_FILE:-./config/orbeon/properties-local.xml}:/usr/local/tomcat/webapps/orbeon/WEB-INF/resources/config/properties-local.xml
       - ${ORBEON_TOMCAT_CONTEXT_FILE:-./config/orbeon/orbeon.xml}:/usr/local/tomcat/conf/Catalina/localhost/orbeon.xml
       - "~/.orbeon/license.xml:/usr/local/tomcat/webapps/orbeon/WEB-INF/resources/config/license.xml"
@@ -121,7 +121,7 @@ services:
       - "3200:3200"
       - "4317:4317"
     volumes:
-      - ./config/tempo.yaml:/etc/tempo.yaml
+      - ./config/infra/tempo.yaml:/etc/tempo.yaml
       # Ten wolumen ma jakies problemy z uprawnieniami
       #- tempo-storage:/tmp/tempo
     command:
@@ -134,7 +134,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - "./config/loki.yaml:/etc/loki/loki.yaml"
+      - "./config/infra/loki.yaml:/etc/loki/loki.yaml"
 
 volumes:
   grafana-storage:
